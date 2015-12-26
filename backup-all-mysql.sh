@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 #
 # $Id: backup-all-mysql.sh 1308 2015-06-15 06:56:40Z stk $
 #
@@ -23,8 +23,10 @@
 # Oder so ähnlich. (vgl. http://dev.mysql.com/doc/refman/4.1/en/innodb-tuning.html)
 #
 
-ERROREMAILTO='root'
+set -x
+
 DBDUMPSDIR=/var/dbdumps
+ERRORFILELASTRUN=$DBDUMPSDIR/errorslastrun.log
 TMPFILE=/tmp/dump.$$
 ERRORFILE=/tmp/mysql_backup_error.$$
 # falsch!
@@ -84,22 +86,23 @@ do
 	# CON-catenieren!
         echo "SET NAMES 'utf8';" > $TMPFILE
         /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db 2>$ERRORFILE 1>>$TMPFILE  || \
-	    cat $ERRORFILE  | \
-	    mail -s "Error from $0: DB backup of $db failed" $ERROREMAILTO
-        nice /usr/bin/bzip2 -c -9 < $TMPFILE > $DBDUMPSDIR/mysqldump_$db.sql.bz2
+	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+	    # cat $ERRORFILE  | mail -s "Error from $0: DB backup of $db failed" $ERROREMAILTO
+        nice bzip2 -c -9 < $TMPFILE > $DBDUMPSDIR/mysqldump_$db.sql.bz2
 done
 
 if [ $TOTAL -eq 1 ]; then
         # backup all databases for total recovery
         # Don't use pipe to bzip - mysqldump must be fast (locks!)
-        # was: /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS --opt --all-databases | /usr/bin/bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
+        # was: /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS --opt --all-databases | bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
 	# alt MKU 2007-12-04
         # /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases >$TMPFILE 2>&1 || \
 	# neu
 	echo "SET NAMES 'utf8';" > $TMPFILE
         /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases  2>$ERRORFILE >>$TMPFILE || \
-	    cat $ERRORFILE  | mail -s "Error from $0: DB backup of ALL failed" $ERROREMAILTO
-        cat $TMPFILE | /usr/bin/bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
+	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+	    #cat $ERRORFILE  | mail -s "Error from $0: DB backup of ALL failed" $ERROREMAILTO
+        cat $TMPFILE | bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
 fi
 
 rm $TMPFILE
