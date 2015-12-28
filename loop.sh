@@ -11,8 +11,12 @@ while true ; do
     # truncate the errorsfile. So if it is empty then everything is ok
     cat /dev/null > /var/dbdumps/errorslastrun.log
 
+
     if [ $# -eq 0 ] ; then
-        ./backup-all-mysql.sh --host=mysql --user=root --password="$MYSQL_ENV_MYSQL_ROOT_PASSWORD"
+        if [ -z "$MYSQL_CONNECTION_PARAMS" ] ; then
+            MYSQL_CONNECTION_PARAMS="--host=mysql --user=root --password=$MYSQL_ENV_MYSQL_ROOT_PASSWORD"
+        fi
+        ./backup-all-mysql.sh $MYSQL_CONNECTION_PARAMS
     else
         ./backup-all-mysql.sh "$@"
     fi

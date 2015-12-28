@@ -74,9 +74,9 @@ chown root.root $DBDUMPSDIR
 
 
 # Backup all MySQL databases, each in one file
-dbs=$(echo "show databases;" | mysql $MYSQL_CONNECTION_PARAMS | grep -vi 'Database\|_schema' ) || \
-	cat $ERRORFILE | tee --append $ERRORFILELASTRUN
-if [ -z "$dbs" ] ; then
+dbs=$(echo "show databases;" | mysql $MYSQL_CONNECTION_PARAMS 2>$ERRORFILE | grep -vi 'Database\|_schema') || error=true
+if [ ! -z "$error" ] ; then
+    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
     exit 1
 fi
 for db in $dbs
