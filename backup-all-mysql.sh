@@ -74,7 +74,12 @@ chown root.root $DBDUMPSDIR
 
 
 # Backup all MySQL databases, each in one file
-for db in $(echo "show databases;" | mysql $MYSQL_CONNECTION_PARAMS | grep -vi 'Database\|_schema' )
+dbs=$(echo "show databases;" | mysql $MYSQL_CONNECTION_PARAMS | grep -vi 'Database\|_schema' ) || \
+	cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+if [ -z "$dbs" ] ; then
+    exit 1
+fi
+for db in $dbs
 do
         # Don't use pipe to bzip - mysqldump must be fast (locks!)
         # was: /usr/bin/mysqldump --opt --database $db | /usr/bin/bzip2 -c -9 > $DBDUMPSDIR/mysqldump_$db.sql.bz2
