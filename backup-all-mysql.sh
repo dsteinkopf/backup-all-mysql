@@ -1,7 +1,5 @@
 #!/bin/bash
 #
-# $Id: backup-all-mysql.sh 1308 2015-06-15 06:56:40Z stk $
-#
 # in /root/.my.cnf muss stehen:
 #
 #       [mysqldump]
@@ -41,6 +39,10 @@ ERRORFILE=/tmp/mysql_backup_error.$$
 #  somit ergibt sich:
 
 MYSQLOPTS=" --skip-opt --add-drop-table --add-locks --create-options --set-charset --disable-keys --lock-tables --quick --default-character-set=utf8 --routines"
+if [ ! -z "$MYSQL_CONNECTION_PARAMS" ] ; then
+    MYSQLOPTS="$MYSQLOPTS $MYSQLDUMP_ADD_OPTS"
+fi
+
 
 if [ -e /etc/backup-all-mysql.conf ] ; then
     . /etc/backup-all-mysql.conf
@@ -64,6 +66,14 @@ if [ _$1 = _--subdir ]; then
         shift
 fi
 
+if [ _$1 = _--skip-tables ]; then
+        SKIP_TABLES="$2"
+        shift
+        shift
+else
+        SKIP_TABLES=""
+fi
+
 MYSQL_CONNECTION_PARAMS="$@"
 
 if [ ! -d $DBDUMPSDIR ]; then
@@ -74,23 +84,36 @@ chown root.root $DBDUMPSDIR
 
 
 # Backup all MySQL databases, each in one file
-dbs=$(echo "show databases;" | mysql $MYSQL_CONNECTION_PARAMS 2>$ERRORFILE | grep -vi 'Database\|_schema') || error=true
+dbs=$(echo "show databases;" | mysql --raw --skip-column-names $MYSQL_CONNECTION_PARAMS 2>$ERRORFILE | grep -vi '_schema$') || error=true
 if [ ! -z "$error" ] ; then
     cat $ERRORFILE | tee --append $ERRORFILELASTRUN
     exit 1
 fi
 for db in $dbs
 do
+	if [ ! -z "$SKIP_TABLES" ] ; then
+		tables=$(echo "show tables" \
+			| mysql --raw --skip-column-names $MYSQL_CONNECTION_PARAMS $db 2>$ERRORFILE \
+			| egrep -v "$SKIP_TABLES"\
+			) || error=true
+		if [ ! -z "$error" ] ; then
+			cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+			exit 1
+		fi
+	else
+		tables=""
+	fi
+
         # Don't use pipe to bzip - mysqldump must be fast (locks!)
         # was: /usr/bin/mysqldump --opt --database $db | /usr/bin/bzip2 -c -9 > $DBDUMPSDIR/mysqldump_$db.sql.bz2
 	#/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db >$TMPFILE 2>&1 || \
 	# neu MKU 2007-12-04
 	# am anfang eines jeden dumps benoetigen wir ein "SET NAMES..."
 	# um fuer einen import auf das richtige char-set zu stellen
-        #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db >$TMPFILE 2>&1 || \
+        #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db $tables >$TMPFILE 2>&1 || \
 	# CON-catenieren!
         echo "SET NAMES 'utf8';" > $TMPFILE
-        /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db 2>$ERRORFILE 1>>$TMPFILE  || \
+        /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db $tables 2>$ERRORFILE 1>>$TMPFILE  || \
 	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
 	    # cat $ERRORFILE  | mail -s "Error from $0: DB backup of $db failed" $ERROREMAILTO
         nice bzip2 -c -9 < $TMPFILE > $DBDUMPSDIR/mysqldump_$db.sql.bz2

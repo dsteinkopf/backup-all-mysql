@@ -17,6 +17,11 @@ VOLUME /var/dbdumps
 ADD loop.sh /loop.sh
 RUN chmod 0755 /loop.sh
 
+ENV BACKUP_INTERVAL= \
+    BACKUP_FIRSTDELAY= \
+    MYSQLDUMP_ADD_OPTS= \
+    MYSQL_CONNECTION_PARAMS=
+
 ADD backup-all-mysql.sh /backup-all-mysql.sh
 RUN chmod 0755 /backup-all-mysql.sh
 
