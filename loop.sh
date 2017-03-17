@@ -15,7 +15,8 @@ sleep $BACKUP_FIRSTDELAY
 
 while true ; do
     # truncate the errorsfile. So if it is empty then everything is ok
-    cat /dev/null > /var/dbdumps/errorslastrun.log
+    # (BTW. truncate always touches the modification time of the file.)
+    truncate --size=0 /var/dbdumps/errorslastrun.log
 
 
     if [ -z "$MYSQL_CONNECTION_PARAMS" ] ; then
