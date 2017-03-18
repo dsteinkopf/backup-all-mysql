@@ -88,9 +88,9 @@ MYSQL_CONNECTION_PARAMS="$@"
 
 if [ ! -d $DBDUMPSDIR ]; then
         mkdir -p $DBDUMPSDIR
+	chmod 700 $DBDUMPSDIR
+	chown root.root $DBDUMPSDIR
 fi
-chmod 700 $DBDUMPSDIR
-chown root.root $DBDUMPSDIR
 
 
 # Backup all MySQL databases, each in one file
