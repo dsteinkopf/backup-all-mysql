@@ -23,10 +23,20 @@
 
 set -x
 
+
 DBDUMPSDIR=/var/dbdumps
 ERRORFILELASTRUN=$DBDUMPSDIR/errorslastrun.log
-TMPFILE=/tmp/dump.$$
+TMPFILE=$DBDUMPSDIR/.dump.$$
 ERRORFILE=/tmp/mysql_backup_error.$$
+
+
+function aterror() {
+        rm -f "$TMPFILE"
+        echo >>$ERRORFILELASTRUN "$(date): $0 aborted."
+}
+trap aterror EXIT # unset below on normal script end
+
+
 # falsch!
 #MYSQLOPTS="--skip-opt --quick --add-locks --all --lock-tables"
 # das abschalten von opt bewirkt, das _keine_ create-options - und
@@ -138,4 +148,7 @@ rm $ERRORFILE
 
 # make the backup readable only by root
 /bin/chmod 600 $DBDUMPSDIR/mysqldump*sql.bz2
+
+trap - EXIT # no trap on normal script end
+trap
 
