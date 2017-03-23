@@ -1,13 +1,5 @@
 #!/bin/bash
 
-if [[ ! -v BACKUP_INTERVAL ]] ; then
-  BACKUP_INTERVAL=$((3600*24))   # default 24 hours
-fi
-if [[ ! -v BACKUP_FIRSTDELAY ]] ; then
-  BACKUP_FIRSTDELAY=0   # default: immediately
-fi
-
-
 set -x
 
 echo "sleeping $BACKUP_FIRSTDELAY seconds before first backup"
