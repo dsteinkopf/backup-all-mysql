@@ -12,7 +12,7 @@ while true ; do
 
 
     if [ -z "$MYSQL_CONNECTION_PARAMS" ] ; then
-        MYSQL_CONNECTION_PARAMS="--host=mysql --user=root --password=$MYSQL_ENV_MYSQL_ROOT_PASSWORD"
+        MYSQL_CONNECTION_PARAMS="--host=$MYSQL_HOST --user=$MYSQL_USER --password=$MYSQL_ENV_MYSQL_ROOT_PASSWORD"
     fi
     ./backup-all-mysql.sh "$@" $MYSQL_CONNECTION_PARAMS
 
