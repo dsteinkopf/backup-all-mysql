@@ -5,7 +5,9 @@ MAINTAINER Dirk Steinkopf "https://github.com/dsteinkopf"
 ENV BACKUP_INTERVAL=86400 \
     BACKUP_FIRSTDELAY=0 \
     MYSQLDUMP_ADD_OPTS= \
-    MYSQL_CONNECTION_PARAMS=
+    MYSQL_CONNECTION_PARAMS= \
+    MYSQL_HOST=mysql \
+    MYSQL_USER=root
 
 # Update
 RUN apt-get update && \
