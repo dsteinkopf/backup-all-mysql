@@ -21,7 +21,7 @@
 # Oder so ähnlich. (vgl. http://dev.mysql.com/doc/refman/4.1/en/innodb-tuning.html)
 #
 
-set -x
+#set -x
 
 
 DBDUMPSDIR=/var/dbdumps
