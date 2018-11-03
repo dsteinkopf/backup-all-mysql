@@ -24,8 +24,6 @@ file_env(){
 
 file_env 'MYSQL_ENV_MYSQL_ROOT_PASSWORD'
 
-set -x
-
 echo "sleeping $BACKUP_FIRSTDELAY seconds before first backup"
 sleep $BACKUP_FIRSTDELAY
 
@@ -38,6 +36,7 @@ while true ; do
     if [ -z "$MYSQL_CONNECTION_PARAMS" ] ; then
         MYSQL_CONNECTION_PARAMS="--host=$MYSQL_HOST --user=$MYSQL_USER --password=$MYSQL_ENV_MYSQL_ROOT_PASSWORD"
     fi
+    echo "start backup"
     ./backup-all-mysql.sh "$@" $MYSQL_CONNECTION_PARAMS
 
 
