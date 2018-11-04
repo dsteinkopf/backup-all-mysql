@@ -45,7 +45,7 @@ while true ; do
 
 
     if [ -z "$MYSQL_CONNECTION_PARAMS" ] ; then
-        echo << EOF > /tmp/my.cnf
+        cat << EOF > /tmp/my.cnf
 [client]
 user = $MYSQL_USER
 password = $MYSQL_PASSWORD
