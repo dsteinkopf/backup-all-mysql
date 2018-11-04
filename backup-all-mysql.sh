@@ -48,7 +48,7 @@ trap aterror EXIT # unset below on normal script end
 # 2. alles bis aus --extended-insert (fuer zeilenweiseinserts) wieder einschalten
 #  somit ergibt sich:
 
-MYSQLOPTS=" --skip-opt --add-drop-table --add-locks --create-options --set-charset --disable-keys --lock-tables --quick --default-character-set=utf8 --routines"
+MYSQLOPTS=" --skip-opt --add-drop-table --add-locks --create-options --set-charset --disable-keys --quick --default-character-set=utf8 --routines"
 if [ ! -z "$MYSQL_CONNECTION_PARAMS" ] ; then
     MYSQLOPTS="$MYSQLOPTS $MYSQLDUMP_ADD_OPTS"
 fi
@@ -122,9 +122,17 @@ do
 	# um fuer einen import auf das richtige char-set zu stellen
         #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db $tables >$TMPFILE 2>&1 || \
 	# CON-catenieren!
-        echo "start backup of $db.$tables" 
+   
+   #the database named "mysql" can't be locked
+   # mysqldump: Got error: 1556: You can't use locks with log tables when using LOCK TABLES
+    CURRENT_OPTS = "$MYSQLOPTS"
+    if[ "$db" -ne "mysql" ]then:
+        CURRENT_OPTS = "$CURRENT_OPTS --lock-tables";
+    fi 
+
+        echo "start backup of $db" 
         echo "SET NAMES 'utf8';" > $TMPFILE
-        /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db $tables 2>$ERRORFILE 1>>$TMPFILE  || \
+        /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $CURRENT_OPTS $db $tables 2>$ERRORFILE 1>>$TMPFILE  || \
 	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
 	    # cat $ERRORFILE  | mail -s "Error from $0: DB backup of $db failed" $ERROREMAILTO
         nice bzip2 -c -9 < $TMPFILE > $DBDUMPSDIR/mysqldump_$db.sql.bz2
