@@ -48,7 +48,7 @@ trap aterror EXIT # unset below on normal script end
 # 2. alles bis aus --extended-insert (fuer zeilenweiseinserts) wieder einschalten
 #  somit ergibt sich:
 
-MYSQLOPTS=" --skip-opt --add-drop-table --add-locks --create-options --set-charset --disable-keys --lock-tables --quick --default-character-set=utf8 --routines"
+MYSQLOPTS=" --skip-opt --add-drop-table --add-locks --create-options --set-charset --disable-keys --lock-tables --quick --default-character-set=utf8 --routines --hex-blob"
 if [ ! -z "$MYSQL_CONNECTION_PARAMS" ] ; then
     MYSQLOPTS="$MYSQLOPTS $MYSQLDUMP_ADD_OPTS"
 fi
