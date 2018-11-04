@@ -52,7 +52,7 @@ password = $MYSQL_PASSWORD
 host = $MYSQL_HOST
 EOF
         chmod 0600 ~/.my.cnf
-        cat ~/.my.cnf
+        # cat ~/.my.cnf
 
         MYSQL_CONNECTION_PARAMS=""
     fi
