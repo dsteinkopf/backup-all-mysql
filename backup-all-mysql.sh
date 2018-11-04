@@ -125,9 +125,9 @@ do
    
    #the database named "mysql" can't be locked
    # mysqldump: Got error: 1556: You can't use locks with log tables when using LOCK TABLES
-    CURRENT_OPTS = "$MYSQLOPTS"
+    CURRENT_OPTS="$MYSQLOPTS"
     if [ "$db" -ne "mysql" ] ; then
-        CURRENT_OPTS = "$CURRENT_OPTS --lock-tables";
+        CURRENT_OPTS="$CURRENT_OPTS --lock-tables";
     fi 
 
         echo "start backup of $db" 
