@@ -45,15 +45,16 @@ while true ; do
 
 
     if [ -z "$MYSQL_CONNECTION_PARAMS" ] ; then
-        cat << EOF > /tmp/my.cnf
+        cat << EOF > ~/.my.cnf
 [client]
 user = $MYSQL_USER
 password = $MYSQL_PASSWORD
 host = $MYSQL_HOST
 EOF
-        cat /tmp/my.cnf
+        chmod 0600 ~/.my.cnf
+        cat ~/.my.cnf
 
-        MYSQL_CONNECTION_PARAMS="--defaults-extra-file=/tmp/my.cnf"
+        MYSQL_CONNECTION_PARAMS=""
     fi
     echo "start backup"
     ./backup-all-mysql.sh "$@" $MYSQL_CONNECTION_PARAMS
