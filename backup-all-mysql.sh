@@ -122,6 +122,7 @@ do
 	# um fuer einen import auf das richtige char-set zu stellen
         #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db $tables >$TMPFILE 2>&1 || \
 	# CON-catenieren!
+        echo "start backup of $db.$tables" 
         echo "SET NAMES 'utf8';" > $TMPFILE
         /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db $tables 2>$ERRORFILE 1>>$TMPFILE  || \
 	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
@@ -136,7 +137,8 @@ if [ $TOTAL -eq 1 ]; then
 	# alt MKU 2007-12-04
         # /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases >$TMPFILE 2>&1 || \
 	# neu
-	echo "SET NAMES 'utf8';" > $TMPFILE
+        echo "start backup of all databases" 
+	   echo "SET NAMES 'utf8';" > $TMPFILE
         /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases  2>$ERRORFILE >>$TMPFILE || \
 	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
 	    #cat $ERRORFILE  | mail -s "Error from $0: DB backup of ALL failed" $ERROREMAILTO
