@@ -45,7 +45,7 @@ while true ; do
 
 
     if [ -z "$MYSQL_CONNECTION_PARAMS" ] ; then
-        MYSQL_CONNECTION_PARAMS="--host=$MYSQL_HOST --user=$MYSQL_USER --password=$MYSQL_PASSWORD"
+        MYSQL_CONNECTION_PARAMS="--defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s\nhost = %s" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_HOST")"
     fi
     echo "start backup"
     ./backup-all-mysql.sh "$@" $MYSQL_CONNECTION_PARAMS
