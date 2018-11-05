@@ -1,6 +1,39 @@
 #!/bin/bash
 
-set -x
+# set -x
+
+# usage: file_env VAR [DEFAULT]
+#    ie: file_env 'XYZ_DB_PASSWORD' 'example'
+# (will allow for "$XYZ_DB_PASSWORD_FILE" to fill in the value of
+#  "$XYZ_DB_PASSWORD" from a file, especially for Docker's secrets feature)
+file_env(){
+    local var="$1"
+    local fileVar="${var}_FILE"
+    local def="${2:-}"
+    if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+        echo >&2 "error: both $var and $fileVar are set (but are exclusive)"
+        exit 1
+    fi
+    local val="$def"
+    if [ "${!var:-}" ]; then
+        val="${!var}"
+    elif [ "${!fileVar:-}" ]; then
+        val="$(< "${!fileVar}")"
+    fi
+    export "$var"="$val"
+    unset "$fileVar"
+}
+
+file_env 'MYSQL_PASSWORD'
+file_env 'MYSQLDUMP_ADD_OPTS'
+file_env 'MYSQL_CONNECTION_PARAMS'
+file_env 'MYSQL_HOST'
+file_env 'MYSQL_USER'
+
+if [ -z "$MYSQL_PASSWORD" ] ; then
+    MYSQL_PASSWORD="$MYSQL_ENV_MYSQL_ROOT_PASSWORD"
+fi
+
 
 echo "sleeping $BACKUP_FIRSTDELAY seconds before first backup"
 sleep $BACKUP_FIRSTDELAY
@@ -12,8 +45,18 @@ while true ; do
 
 
     if [ -z "$MYSQL_CONNECTION_PARAMS" ] ; then
-        MYSQL_CONNECTION_PARAMS="--host=$MYSQL_HOST --user=$MYSQL_USER --password=$MYSQL_ENV_MYSQL_ROOT_PASSWORD"
+        cat << EOF > ~/.my.cnf
+[client]
+user = $MYSQL_USER
+password = $MYSQL_PASSWORD
+host = $MYSQL_HOST
+EOF
+        chmod 0600 ~/.my.cnf
+        # cat ~/.my.cnf
+
+        MYSQL_CONNECTION_PARAMS=""
     fi
+    echo "start backup"
     ./backup-all-mysql.sh "$@" $MYSQL_CONNECTION_PARAMS
 
 
