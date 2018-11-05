@@ -137,12 +137,12 @@ if [ $TOTAL -eq 1 ]; then
 	# alt MKU 2007-12-04
         # /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases >$TMPFILE 2>&1 || \
 	# neu
-    echo "start backup of all databases" 
-    echo "SET NAMES 'utf8';" > $TMPFILE
-        /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases  2>$ERRORFILE >>$TMPFILE || \
+   echo "start backup of all databases" 
+   echo "SET NAMES 'utf8';" > $TMPFILE
+   /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases  2>$ERRORFILE >>$TMPFILE || \
 	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
 	    #cat $ERRORFILE  | mail -s "Error from $0: DB backup of ALL failed" $ERROREMAILTO
-        cat $TMPFILE | bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
+   cat $TMPFILE | bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
 fi
 
 rm $TMPFILE
