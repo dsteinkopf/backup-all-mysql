@@ -88,8 +88,8 @@ MYSQL_CONNECTION_PARAMS="$@"
 
 if [ ! -d $DBDUMPSDIR ]; then
         mkdir -p $DBDUMPSDIR
-	chmod 700 $DBDUMPSDIR
-	chown root.root $DBDUMPSDIR
+        chmod 700 $DBDUMPSDIR
+        chown root.root $DBDUMPSDIR
 fi
 
 
@@ -101,27 +101,27 @@ if [ ! -z "$error" ] ; then
 fi
 for db in $dbs
 do
-	if [ ! -z "$SKIP_TABLES" ] ; then
-		tables=$(echo "show tables" \
-			| mysql --raw --skip-column-names $MYSQL_CONNECTION_PARAMS $db 2>$ERRORFILE \
-			| egrep -v "$SKIP_TABLES"\
-			) || error=true
-		if [ ! -z "$error" ] ; then
-			cat $ERRORFILE | tee --append $ERRORFILELASTRUN
-			exit 1
-		fi
-	else
-		tables=""
-	fi
+        if [ ! -z "$SKIP_TABLES" ] ; then
+                tables=$(echo "show tables" \
+                        | mysql --raw --skip-column-names $MYSQL_CONNECTION_PARAMS $db 2>$ERRORFILE \
+                        | egrep -v "$SKIP_TABLES"\
+                        ) || error=true
+                if [ ! -z "$error" ] ; then
+                        cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+                        exit 1
+                fi
+        else
+                tables=""
+        fi
 
         # Don't use pipe to bzip - mysqldump must be fast (locks!)
         # was: /usr/bin/mysqldump --opt --database $db | /usr/bin/bzip2 -c -9 > $DBDUMPSDIR/mysqldump_$db.sql.bz2
-	#/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db >$TMPFILE 2>&1 || \
-	# neu MKU 2007-12-04
-	# am anfang eines jeden dumps benoetigen wir ein "SET NAMES..."
-	# um fuer einen import auf das richtige char-set zu stellen
+        #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db >$TMPFILE 2>&1 || \
+        # neu MKU 2007-12-04
+        # am anfang eines jeden dumps benoetigen wir ein "SET NAMES..."
+        # um fuer einen import auf das richtige char-set zu stellen
         #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db $tables >$TMPFILE 2>&1 || \
-	# CON-catenieren!
+        # CON-catenieren!
    
     #the database named "mysql" can't be locked
     #mysqldump: Got error: 1556: You can't use locks with log tables when using LOCK TABLES
@@ -140,8 +140,8 @@ do
         echo "start backup of $db.$tables" 
         echo "SET NAMES 'utf8';" > $TMPFILE
         /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $CURRENT_OPTS $db $tables 2>$ERRORFILE 1>>$TMPFILE  || \
-	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
-	    # cat $ERRORFILE  | mail -s "Error from $0: DB backup of $db failed" $ERROREMAILTO
+            cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+            # cat $ERRORFILE  | mail -s "Error from $0: DB backup of $db failed" $ERROREMAILTO
         nice bzip2 -c -9 < $TMPFILE > $DBDUMPSDIR/mysqldump_$db.sql.bz2
 done
 
@@ -149,15 +149,15 @@ if [ $TOTAL -eq 1 ]; then
         # backup all databases for total recovery
         # Don't use pipe to bzip - mysqldump must be fast (locks!)
         # was: /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS --opt --all-databases | bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
-	# alt MKU 2007-12-04
+        # alt MKU 2007-12-04
         # /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases >$TMPFILE 2>&1 || \
-	# neu
+        # neu
         echo "start backup of all databases" 
         echo "SET NAMES 'utf8';" > $TMPFILE
         CURRENT_OPTS="$MYSQLOPTS --lock-tables";
         /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $CURRENT_OPTS --all-databases  2>$ERRORFILE >>$TMPFILE || \
-	    cat $ERRORFILE | tee --append $ERRORFILELASTRUN
-	    #cat $ERRORFILE  | mail -s "Error from $0: DB backup of ALL failed" $ERROREMAILTO
+            cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+            #cat $ERRORFILE  | mail -s "Error from $0: DB backup of ALL failed" $ERROREMAILTO
         cat $TMPFILE | bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
 fi
 
