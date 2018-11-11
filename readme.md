@@ -5,7 +5,7 @@ Regular backup an DB found in the mysql linked as "mysql" to the voloume `/var/d
 
 You have to:
 
-* run the container `dsteinkopf/backup-all-mysql``
+* run the container `dsteinkopf/backup-all-mysql`
 * create a link called `mysql` to you db to be backed up.
 * Create a volume called `/var/dbdumps`.
 
