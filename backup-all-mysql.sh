@@ -107,8 +107,8 @@ do
                 | egrep -v "$SKIP_TABLES"\
                 ) || error=true
         if [ ! -z "$error" ] ; then
-                cat $ERRORFILE | tee --append $ERRORFILELASTRUN
-                exit 1
+            cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+            exit 1
         fi
     else
         tables=""
