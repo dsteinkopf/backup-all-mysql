@@ -127,7 +127,7 @@ do
     #mysqldump: Got error: 1556: You can't use locks with log tables when using LOCK TABLES
     CURRENT_OPTS="$MYSQLOPTS"
     if [ "$db" != "mysql" ] ; then
-        CURRENT_OPTS="$CURRENT_OPTS --lock-tables";
+        CURRENT_OPTS="--lock-tables $CURRENT_OPTS";
     fi 
 
 
