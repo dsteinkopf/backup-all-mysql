@@ -165,7 +165,7 @@ rm $TMPFILE
 rm $ERRORFILE
 
 # make the backup readable only by root
-/bin/chmod 600 $DBDUMPSDIR/mysqldump*sql.bz2
+/bin/chmod 640 $DBDUMPSDIR/mysqldump*sql.bz2
 
 trap - EXIT # no trap on normal script end
 trap
