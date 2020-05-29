@@ -16,7 +16,8 @@ RUN apt-get update && \
 	apt-get clean && \
 	apt-get install -y \
 		mysql-client \
-		bzip2 && \
+		bzip2 \
+		lbzip2 && \
 	mkdir /var/dbdumps
 
 

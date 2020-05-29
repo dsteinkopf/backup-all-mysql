@@ -48,7 +48,7 @@ trap aterror EXIT # unset below on normal script end
 # 2. alles bis aus --extended-insert (fuer zeilenweiseinserts) wieder einschalten
 #  somit ergibt sich:
 
-MYSQLOPTS=" --skip-opt --add-drop-table --add-locks --create-options --set-charset --disable-keys --quick --default-character-set=utf8 --routines --hex-blob"
+MYSQLOPTS=" --skip-opt --add-drop-table --add-locks --create-options --set-charset --disable-keys --quick --default-character-set=utf8 --routines --hex-blob --column-statistics=0"
 if [ ! -z "$MYSQL_CONNECTION_PARAMS" ] ; then
     MYSQLOPTS="$MYSQLOPTS $MYSQLDUMP_ADD_OPTS"
 fi
@@ -114,6 +114,9 @@ do
         tables=""
     fi
 
+    DESTFILE=$DBDUMPSDIR/mysqldump_$db.sql.bz2
+    DESTFILE_TMP=$DESTFILE.tmp
+
     # Don't use pipe to bzip - mysqldump must be fast (locks!)
     # was: /usr/bin/mysqldump --opt --database $db | /usr/bin/bzip2 -c -9 > $DBDUMPSDIR/mysqldump_$db.sql.bz2
     #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db >$TMPFILE 2>&1 || \
@@ -142,7 +145,7 @@ do
     /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $CURRENT_OPTS $db $tables 2>$ERRORFILE 1>>$TMPFILE  || \
         cat $ERRORFILE | tee --append $ERRORFILELASTRUN
         # cat $ERRORFILE  | mail -s "Error from $0: DB backup of $db failed" $ERROREMAILTO
-    nice bzip2 -c -9 < $TMPFILE > $DBDUMPSDIR/mysqldump_$db.sql.bz2
+    nice lbzip2 --stdout < $TMPFILE > $DESTFILE_TMP && mv $DESTFILE_TMP $DESTFILE
 done
 
 if [ $TOTAL -eq 1 ]; then
@@ -152,13 +155,17 @@ if [ $TOTAL -eq 1 ]; then
     # alt MKU 2007-12-04
     # /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases >$TMPFILE 2>&1 || \
     # neu
+
+    DESTFILE=$DBDUMPSDIR/mysqldump_all_databases.sql.bz2
+    DESTFILE_TMP=$DESTFILE.tmp
+
     echo "start backup of all databases" 
     echo "SET NAMES 'utf8';" > $TMPFILE
     CURRENT_OPTS="$MYSQLOPTS --lock-tables";
     /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $CURRENT_OPTS --all-databases  2>$ERRORFILE >>$TMPFILE || \
         cat $ERRORFILE | tee --append $ERRORFILELASTRUN
         #cat $ERRORFILE  | mail -s "Error from $0: DB backup of ALL failed" $ERROREMAILTO
-    cat $TMPFILE | bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
+    cat $TMPFILE | bzip2 --stdout > $DESTFILE_TMP && mv $DESTFILE_TMP $DESTFILE
 fi
 
 rm $TMPFILE
