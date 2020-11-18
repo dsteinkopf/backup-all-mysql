@@ -18,6 +18,7 @@ You have to:
 * MYSQL_HOST (default = "mysql"): Hostname (or IP) of mysql database.
 * MYSQL_USER (default = "root"): Username to connect to mysql database.
 * MYSQL_PASSWORD ( use MYSQL_ENV_MYSQL_ROOT_PASSWORD if available ): The password to connect to mysql .
+* USE_PIPE_TO_BZ (default = 1): If 1 then mysqldump directly pipes to lbzip2 instead of using a temp file (saves disk space but takes longer)
 
 **MYSQLDUMP_ADD_OPTS**, **MYSQL_CONNECTION_PARAMS**, **MYSQL_HOST**,  **MYSQL_USER** ,  **MYSQL_PASSWORD**, can be used with suffix `_FILE`, if stored in a file .
 This is usefull for [docker secrets](https://docs.docker.com/engine/swarm/secrets/) (only available for swarm mode), or to hide sensitive data in general ( like **MYSQL_PASSWORD** ) . 

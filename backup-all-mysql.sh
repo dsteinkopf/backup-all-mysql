@@ -117,15 +117,6 @@ do
     DESTFILE=$DBDUMPSDIR/mysqldump_$db.sql.bz2
     DESTFILE_TMP=$DESTFILE.tmp
 
-    # Don't use pipe to bzip - mysqldump must be fast (locks!)
-    # was: /usr/bin/mysqldump --opt --database $db | /usr/bin/bzip2 -c -9 > $DBDUMPSDIR/mysqldump_$db.sql.bz2
-    #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db >$TMPFILE 2>&1 || \
-    # neu MKU 2007-12-04
-    # am anfang eines jeden dumps benoetigen wir ein "SET NAMES..."
-    # um fuer einen import auf das richtige char-set zu stellen
-    #/usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS $db $tables >$TMPFILE 2>&1 || \
-    # CON-catenieren!
-   
     #the database named "mysql" can't be locked
     #mysqldump: Got error: 1556: You can't use locks with log tables when using LOCK TABLES
     CURRENT_OPTS="$MYSQLOPTS"
@@ -134,27 +125,30 @@ do
     fi 
 
 
-    if [ "$db" = "" ] ; then
+    if [ "$tables" = "" ] ; then
         echo "start backup of $db" 
     else
         echo "start backup of $db.$tables" 
     fi
 
-    echo "start backup of $db.$tables" 
-    echo "SET NAMES 'utf8';" > $TMPFILE
-    /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $CURRENT_OPTS $db $tables 2>$ERRORFILE 1>>$TMPFILE  || \
-        cat $ERRORFILE | tee --append $ERRORFILELASTRUN
-        # cat $ERRORFILE  | mail -s "Error from $0: DB backup of $db failed" $ERROREMAILTO
-    nice lbzip2 --stdout < $TMPFILE > $DESTFILE_TMP && mv $DESTFILE_TMP $DESTFILE
+    if [ ${USE_PIPE_TO_BZ:-1} = "1" ] ; then
+        set -o pipefail
+        ( echo "SET NAMES 'utf8';" ; \
+            /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $CURRENT_OPTS $db $tables 2>$ERRORFILE \
+        ) | nice lbzip2 --stdout > $DESTFILE_TMP && mv $DESTFILE_TMP $DESTFILE \
+        || cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+    else
+        # Don't use pipe to bzip if mysqldump must be fast (locks!)
+        echo "SET NAMES 'utf8';" > $TMPFILE
+        /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $CURRENT_OPTS $db $tables 2>$ERRORFILE 1>>$TMPFILE  || \
+            cat $ERRORFILE | tee --append $ERRORFILELASTRUN
+        nice lbzip2 --stdout < $TMPFILE > $DESTFILE_TMP && mv $DESTFILE_TMP $DESTFILE
+    fi
 done
 
 if [ $TOTAL -eq 1 ]; then
     # backup all databases for total recovery
     # Don't use pipe to bzip - mysqldump must be fast (locks!)
-    # was: /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS --opt --all-databases | bzip2 -c -9 > $DBDUMPSDIR/mysqldump_all_databases.sql.bz2
-    # alt MKU 2007-12-04
-    # /usr/bin/mysqldump $MYSQL_CONNECTION_PARAMS $MYSQLOPTS --all-databases >$TMPFILE 2>&1 || \
-    # neu
 
     DESTFILE=$DBDUMPSDIR/mysqldump_all_databases.sql.bz2
     DESTFILE_TMP=$DESTFILE.tmp
@@ -168,7 +162,7 @@ if [ $TOTAL -eq 1 ]; then
     cat $TMPFILE | bzip2 --stdout > $DESTFILE_TMP && mv $DESTFILE_TMP $DESTFILE
 fi
 
-rm $TMPFILE
+rm -f $TMPFILE
 rm $ERRORFILE
 
 # make the backup readable only by root
