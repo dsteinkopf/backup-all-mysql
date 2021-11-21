@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM resin/rpi-raspbian:buster
 
 MAINTAINER Dirk Steinkopf "https://github.com/dsteinkopf"
 
