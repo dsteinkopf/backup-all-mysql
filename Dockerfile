@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM resin/rpi-raspbian:buster
 
 MAINTAINER Dirk Steinkopf "https://github.com/dsteinkopf"
 
@@ -15,7 +15,7 @@ RUN apt-get update && \
 	apt-get -y autoremove && \
 	apt-get clean && \
 	apt-get install -y \
-		mysql-client \
+		mariadb-client \
 		bzip2 \
 		lbzip2 && \
 	mkdir /var/dbdumps
