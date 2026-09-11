@@ -39,8 +39,32 @@ if [ -z "$MYSQL_PASSWORD" ] ; then
 fi
 
 
+# Without a handler SIGTERM is discarded for PID 1 and every stop ends in SIGKILL
+# after the timeout.
+child_pid=
+
+# SIGKILL, not SIGTERM: backup-all-mysql.sh would log "aborted." to
+# errorslastrun.log from its EXIT trap, which monitoring reads as a failed backup.
+terminate() {
+    echo "received SIGTERM, exiting"
+    if [ -n "$child_pid" ] ; then
+        kill -KILL "$child_pid" 2>/dev/null
+    fi
+    exit 143
+}
+trap terminate TERM INT
+
+# Background + wait, because bash defers traps until a foreground command returns.
+run_interruptible() {
+    "$@" &
+    child_pid=$!
+    wait "$child_pid"
+    child_pid=
+}
+
+
 echo "sleeping $BACKUP_FIRSTDELAY seconds before first backup"
-sleep $BACKUP_FIRSTDELAY
+run_interruptible sleep $BACKUP_FIRSTDELAY
 
 while true ; do
     # truncate the errorsfile. So if it is empty then everything is ok
@@ -61,10 +85,10 @@ EOF
         MYSQL_CONNECTION_PARAMS=""
     fi
     echo "start backup"
-    ./backup-all-mysql.sh "$@" $MYSQL_CONNECTION_PARAMS
+    run_interruptible ./backup-all-mysql.sh "$@" $MYSQL_CONNECTION_PARAMS
 
 
     # TODO: sleep BACKUP_INTERVAL minus duration of last dump
     echo "sleeping $BACKUP_INTERVAL seconds"
-    sleep $BACKUP_INTERVAL
+    run_interruptible sleep $BACKUP_INTERVAL
 done
